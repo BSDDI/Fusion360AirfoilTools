@@ -30,31 +30,57 @@ fusion = Fusion()
 class FusionDocument(object):
     def __init__(self, doc):
         self._document = doc
-        self._root_component = self._document.design.rootComponent
         
+    @property
+    def root_component(self):
+        return self._document.design.rootComponent
+
+    @property
+    def active_component(self):
+        return self._document.design.activeComponent
+
     def create_sketch(self, name, plane):
-        sketch = self._root_component.sketches.add(plane)
+        sketch = self.root_component.sketches.add(plane)
         sketch.name = name
         return sketch
     
     @property
     def xy_plane(self):
-        return self._root_component.xYConstructionPlane
+        return self.root_component.xYConstructionPlane
     
     @property
     def xz_plane(self):
-        return self._root_component.xZConstructionPlane
+        return self.root_component.xZConstructionPlane
     
     @property
     def yz_plane(self):
-        return self._root_component.yZConstructionPlane
+        return self.root_component.yZConstructionPlane
     
     @property
     def sketches(self):
         sketches = {}
-        for sketch in self._root_component.sketches:
+        for sketch in self.root_component.sketches:
             sketches[sketch.name] = sketch
         return sketches
+
+    @staticmethod
+    def active_document():
+        return FusionDocument(fusion.active_document)
+
+class FusionComponent(object):
+    def __init__(self, component):
+        self._component = component
+
+    @property
+    def sketches(self):
+        sketches = {}
+        for sketch in self._component.sketches:
+            sketches[sketch.name] = sketch
+        return sketches   
+
+    @staticmethod
+    def active_component():
+        return FusionComponent(FusionDocument.active_document().active_component)
 
 class FusionSketch(object):
     def __init__(self, sketch):
@@ -96,3 +122,39 @@ class FusionSketch(object):
             return [self.project(item) for item in items]
         else:
             return self._sketch.project(items)
+
+    @property
+    def curves(self):
+        return [curve for curve in self._sketch.sketchCurves]
+
+    @property
+    def sketch_curves(self):
+        return [FusionSketchCurve(curve) for curve in self.curves]
+
+    @property
+    def output_sketch_curves(self):
+        return [curve for curve in self.sketch_curves if not curve.is_construction]
+
+    @property
+    def profiles(self):
+        return [profile for profile in self._sketch.profiles]
+
+
+class FusionSketchCurve(object):
+    def __init__(self, curve):
+        self._curve = curve
+    
+    @property
+    def length(self):
+        return self._curve.length
+
+    @property
+    def curve_type(self):
+        return self._curve.objectType
+
+    @property
+    def is_construction(self):
+        return self._curve.isConstruction
+
+    def __str__(self):
+        return "curve, length = " + str(self.length) + ", type = " + self.curve_type

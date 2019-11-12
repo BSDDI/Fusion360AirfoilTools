@@ -5,7 +5,7 @@ import adsk.core, adsk.fusion, adsk.cam, traceback
 from enum import Enum
 from .airfoil import Airfoil
 from .geometry import Point
-from .fusion_connection import fusion, FusionDocument, FusionSketch
+from .fusion_connection import fusion, FusionDocument, FusionSketch, FusionComponent, FusionSketchCurve
 
 
 section_data = {
@@ -34,11 +34,19 @@ def update_active_airfoil():
     spline = sketch.create_spline(section.modified_positions)
     line = sketch.create_line(spline.fitPoints.item(0), spline.fitPoints.item(spline.fitPoints.count-1))
 
+def misc_test():
+    comp = FusionComponent.active_component()
+    sket = FusionSketch(comp.sketches["side_1"])
+    for curve in sket.profiles[0].profileLoops.item(0).profileCurves:
+        print(str(FusionSketchCurve(curve.sketchEntity)))
+    
+
+
 def run(context):
     ui = None
     try:
 
-        update_active_airfoil()
+        misc_test()
         pass
     except:
         if fusion.ui:
