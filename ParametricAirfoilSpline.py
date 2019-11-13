@@ -37,8 +37,11 @@ def update_active_airfoil():
 def misc_test():
     comp = FusionComponent.active_component()
     sket = FusionSketch(comp.sketches["side_1"])
-    for curve in sket.profiles[0].profileLoops.item(0).profileCurves:
-        print(str(FusionSketchCurve(curve.sketchEntity)))
+    for curve in sket.profiles[0].outer_loop.sketch_curves:
+        for point in curve.parametric_points(10):
+            print(str(point))
+
+            
     
 
 
