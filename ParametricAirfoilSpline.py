@@ -5,7 +5,7 @@ import adsk.core, adsk.fusion, adsk.cam, traceback
 from enum import Enum
 from .airfoil import Airfoil
 from .geometry import Point
-from .fusion_connection import fusion, FusionDocument, FusionSketch, FusionComponent, FusionSketchCurve
+from .fusion_connection import fusion, FusionDocument, FusionSketch, FusionComponent, FusionSketchCurve, FusionPoint
 
 
 section_data = {
@@ -37,10 +37,12 @@ def update_active_airfoil():
 def misc_test():
     comp = FusionComponent.active_component()
     sket = FusionSketch(comp.sketches["side_1"])
-    for curve in sket.profiles[0].outer_loop.sketch_curves:
+    for curve in sket.profiles[0].outer_loop.reorder_from_point(Point(-5, 0, 0)):
+        print(str(curve))
+        print("start point = " + str(curve.start_point))
         for point in curve.parametric_points(10):
             print(str(point))
-
+        print("end point = " + str(curve.end_point))
             
     
 

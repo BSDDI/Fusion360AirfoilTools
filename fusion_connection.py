@@ -162,14 +162,38 @@ class FusionProfile(object):
 class FusionLoop(object):
     def __init__(self, loop):
         self._loop = loop
+        self._sketch_curves = []
 
     @property
     def sketch_curves(self):
-        return [FusionSketchCurve(curve.sketchEntity) for curve in self._loop.profileCurves]
-    
+        if not self._sketch_curves:
+            self._sketch_curves = [FusionSketchCurve(curve.sketchEntity) for curve in self._loop.profileCurves]
+        return self._sketch_curves
+
     @property
     def is_outer(self):
         return self._loop.isOuter
+
+    def reorder_from_point(self, target_start_point):
+        new_start_curve_id = self.closest_curve_id(target_start_point)
+        new_curve_list = []
+        for i in range(new_start_curve_id, len(self.sketch_curves)):
+            new_curve_list.append(self.sketch_curves[i])
+        for i in range(0, new_start_curve_id):
+            new_curve_list.append(self.sketch_curves[i])
+        return new_curve_list
+
+    def closest_curve_id(self, target_point):
+        output_curve_id = 0
+        min_distance = Point.distance(self.sketch_curves[0].start_point.position, target_point)
+        for i, curve in enumerate(self.sketch_curves[1:], 1):
+            check_dist = Point.distance(curve.start_point.position, target_point)
+            if check_dist < min_distance:
+                min_distance = check_dist
+                output_curve_id = i
+        return output_curve_id
+
+
 
 class FusionSketchCurve(object):
     def __init__(self, curve):
@@ -193,21 +217,19 @@ class FusionSketchCurve(object):
 
     @property
     def start_point(self):
-        return self._curve.startSketchPoint
+        return FusionPoint(self._curve.startSketchPoint.geometry)
     
     @property
     def end_point(self):
-        return self._curve.endSketchPoint
+        return FusionPoint(self._curve.endSketchPoint.geometry)
     
     def parametric_points(self, npoints):
         points = []
         for i in range(0, npoints):
-            points.append(self.parametric_point(
-                i * (self.parametric_range[1] - self.parametric_range[0]) / npoints + self.parametric_range[0]
-            ))
+            new_point = self.parametric_point(i * (self.parametric_range[1] - self.parametric_range[0]) / npoints + self.parametric_range[0])
+            points.append(new_point)
         return points
 
-    @property
     def parametric_point(self, param):
         new_point3d = self._curve.geometry.evaluator.getPointAtParameter(param)
         if new_point3d[0]:
@@ -225,6 +247,8 @@ class FusionSketchCurve(object):
                 self._parametric_range = param_range[1:]
         return self._parametric_range
 
+
+
 class FusionPoint(object):
     def __init__(self, point):
         self._point = point
@@ -232,3 +256,11 @@ class FusionPoint(object):
 
     def __str__(self):
         return "FusionPoint location = " + str(self._position)
+
+    @property
+    def point(self):
+        return self._point
+
+    @property
+    def position(self):
+        return self._position
