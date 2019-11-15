@@ -39,23 +39,6 @@ class FusionDocument(object):
     def active_component(self):
         return self._document.design.activeComponent
 
-    def create_sketch(self, name, plane):
-        sketch = self.root_component.sketches.add(plane)
-        sketch.name = name
-        return sketch
-    
-    @property
-    def xy_plane(self):
-        return self.root_component.xYConstructionPlane
-    
-    @property
-    def xz_plane(self):
-        return self.root_component.xZConstructionPlane
-    
-    @property
-    def yz_plane(self):
-        return self.root_component.yZConstructionPlane
-    
     @property
     def sketches(self):
         sketches = {}
@@ -72,6 +55,10 @@ class FusionComponent(object):
         self._component = component
 
     @property
+    def component(self):
+        return self._component
+
+    @property
     def sketches(self):
         sketches = {}
         for sketch in self._component.sketches:
@@ -82,10 +69,29 @@ class FusionComponent(object):
     def active_component():
         return FusionComponent(FusionDocument.active_document().active_component)
 
+    def create_sketch(self, name, plane):
+        sketch = self._component.sketches.add(plane)
+        sketch.name = name
+        return sketch
+
+    @property
+    def xy_plane(self):
+        return self._component.xYConstructionPlane
+    
+    @property
+    def xz_plane(self):
+        return self._component.xZConstructionPlane
+    
+    @property
+    def yz_plane(self):
+        return self._component.yZConstructionPlane
+    
+
 class FusionSketch(object):
     def __init__(self, sketch):
         self._sketch = sketch
         self._profiles = []
+
     def create_point(self, location):
         if isinstance(location, list):
             return [self.create_point(loc) for loc in location]
@@ -93,6 +99,9 @@ class FusionSketch(object):
             return adsk.core.Point3D.create(0.1 * location.x, 0.1 * location.y, 0)
         else:
             raise TypeError("Expected a Point or list[Point]")
+    
+    def create_sketch_point(self, fusion_point):
+        return self._sketch.sketchPoints.add(fusion_point.point)
 
     def create_spline(self, locations):
         point_collection = fusion.object_collection_from_list(self.create_point(locations))
@@ -124,6 +133,10 @@ class FusionSketch(object):
             return self._sketch.project(items)
 
     @property
+    def plane(self):
+        return self._sketch.referencePlane
+
+    @property
     def curves(self):
         return [curve for curve in self._sketch.sketchCurves]
 
@@ -140,6 +153,16 @@ class FusionSketch(object):
         if not self._profiles:
             self._profiles = [FusionProfile(profile) for profile in self._sketch.profiles]
         return self._profiles
+
+    def model_to_sketch_space(self, point):
+        return FusionPoint(self._sketch.modelToSketchSpace(point.point))
+
+    def sketch_to_model_space(self, point):
+        return FusionPoint(self._sketch.sketchToModelSpace(point.point))
+
+    @property
+    def origin(self): 
+        return FusionPoint(self._sketch.origin)
 
 class FusionProfile(object):
     def __init__(self, profile):
@@ -174,26 +197,33 @@ class FusionLoop(object):
     def is_outer(self):
         return self._loop.isOuter
 
-    def reorder_from_point(self, target_start_point):
-        new_start_curve_id = self.closest_curve_id(target_start_point)
+    @staticmethod
+    def reorder_from_point(target_start_point, curve_list):
+        new_start_curve_id = FusionLoop.closest_curve_id(target_start_point, curve_list)
         new_curve_list = []
-        for i in range(new_start_curve_id, len(self.sketch_curves)):
-            new_curve_list.append(self.sketch_curves[i])
+        for i in range(new_start_curve_id, len(curve_list)):
+            new_curve_list.append(curve_list[i])
         for i in range(0, new_start_curve_id):
-            new_curve_list.append(self.sketch_curves[i])
+            new_curve_list.append(curve_list[i])
         return new_curve_list
 
-    def closest_curve_id(self, target_point):
+    @staticmethod
+    def closest_curve_id(target_point, curve_list):
         output_curve_id = 0
-        min_distance = Point.distance(self.sketch_curves[0].start_point.position, target_point)
-        for i, curve in enumerate(self.sketch_curves[1:], 1):
-            check_dist = Point.distance(curve.start_point.position, target_point)
+        min_distance = Point.distance(curve_list[0].start_point.position, target_point.position)
+        for i, curve in enumerate(curve_list[1:], 1):
+            check_dist = Point.distance(curve.start_point.position, target_point.position)
             if check_dist < min_distance:
                 min_distance = check_dist
                 output_curve_id = i
         return output_curve_id
 
-
+    @staticmethod
+    def compare_curve_lists(list1, list2):
+        if len(list1) != len(list2): return False
+        for curve1, curve2 in zip(list1, list2):
+            if curve1.curve_type != curve2.curve_type: return False
+        return True
 
 class FusionSketchCurve(object):
     def __init__(self, curve):
@@ -223,6 +253,13 @@ class FusionSketchCurve(object):
     def end_point(self):
         return FusionPoint(self._curve.endSketchPoint.geometry)
     
+    @property
+    def gcode_points(self):
+        if self.curve_type == "adsk::fusion::SketchLine":
+            return [self.start_point, self.end_point]
+        else:
+            return self.parametric_points(50)
+
     def parametric_points(self, npoints):
         points = []
         for i in range(0, npoints):
@@ -264,3 +301,8 @@ class FusionPoint(object):
     @property
     def position(self):
         return self._position
+
+    @staticmethod
+    def from_position(position):
+        point3d = adsk.core.Point3D.create(position.x, position.y, position.z)
+        return FusionPoint(point3d)
