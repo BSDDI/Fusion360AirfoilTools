@@ -6,6 +6,8 @@ from enum import Enum
 from .airfoil import Airfoil
 from .geometry import Point
 from .fusion_connection import fusion, FusionDocument, FusionSketch, FusionComponent, FusionSketchCurve, FusionPoint, FusionLoop
+from .hot_wire_gcode import HotWireGcode, xy_plane, za_plane
+from tkinter import filedialog
 
 section_data = {
     "wing_centre": ("naca2411-il", 200, 3),
@@ -34,37 +36,16 @@ def update_active_airfoil():
     spline = sketch.create_spline(section.modified_positions)
     line = sketch.create_line(spline.fitPoints.item(0), spline.fitPoints.item(spline.fitPoints.count-1))
 
-def misc_test():
-    comp = FusionComponent.active_component()
-    sket = FusionSketch(comp.sketches["side_1"])
-    sorted_curves = FusionLoop.reorder_from_point(
-        sket.model_to_sketch_space(
-            FusionPoint.from_position(Point(sket.origin.position.x, 0, 0))
-            ), 
-        sket.profiles[0].outer_loop.sketch_curves
-        )
-
-    sket2 = FusionSketch(comp.sketches["side_2"])
-    sorted_curves2 = FusionLoop.reorder_from_point(
-        sket2.model_to_sketch_space(
-            FusionPoint.from_position(Point(sket2.origin.position.x, 0, 0))
-            ), 
-        sket2.profiles[0].outer_loop.sketch_curves
-        )
-
-    print(FusionLoop.compare_curve_lists(sorted_curves, sorted_curves2))
-
-    points1 = []
-    points2 = []
-    for curve, curve2 in zip(sorted_curves, sorted_curves2):
-        for point, point2 in zip(curve.gcode_points, curve2.gcode_points):
-            points1.append(sket.sketch_to_model_space(point))
-            points2.append(sket2.sketch_to_model_space(point2))
+def create_gcode():
+    hw = HotWireGcode(FusionComponent.active_component())
+    target_file = filedialog.asksaveasfilename()
+    hw.create_gcode_file(target_file)
 
 
+def print_toolpaths(hw):
     #Stuff for checking    
-    sket1a = FusionSketch(comp.create_sketch("points1",sket.plane))
-    sket2a = FusionSketch(comp.create_sketch("points2", sket2.plane))
+    sket1a = FusionSketch(comp.create_sketch("points1", xy_plane))
+    sket2a = FusionSketch(comp.create_sketch("points2", za_plane))
     
     sketchpoints1 = []
     sketchpoints2 = []
@@ -85,7 +66,7 @@ def run(context):
     ui = None
     try:
 
-        misc_test()
+        create_gcode()
         pass
     except:
         if fusion.ui:
