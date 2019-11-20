@@ -40,26 +40,11 @@ def create_gcode():
     hw = HotWireGcode(FusionComponent.active_component())
     target_file = filedialog.asksaveasfilename()
     hw.create_gcode_file(target_file)
-
+    print_toolpaths(hw)
+    
 
 def print_toolpaths(hw):
-    #Stuff for checking    
-    sket1a = FusionSketch(comp.create_sketch("points1", xy_plane))
-    sket2a = FusionSketch(comp.create_sketch("points2", za_plane))
-    
-    sketchpoints1 = []
-    sketchpoints2 = []
-
-    for point1, point2 in zip(points1, points2):
-        sketchpoints1.append(sket1a.create_sketch_point(sket1a.model_to_sketch_space(point1)))
-        sketchpoints2.append(sket2a.create_sketch_point(sket2a.model_to_sketch_space(point2)))
-        #print("point1:" + str(point1.position) + " point2:" + str(point2.position))
-        
-    for point1, point2 in zip(sketchpoints1, sketchpoints2):
-        axisInput = comp.component.constructionAxes.createInput()
-        axisInput.setByTwoPoints(point1, point2)
-        comp.component.constructionAxes.add(axisInput)
-
+    hw.create_sketches()
 
 
 def run(context):
@@ -67,6 +52,7 @@ def run(context):
     try:
 
         create_gcode()
+
         pass
     except:
         if fusion.ui:

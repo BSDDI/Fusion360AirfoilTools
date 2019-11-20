@@ -1,5 +1,5 @@
 import adsk.core, adsk.fusion, adsk.cam, traceback
-from .geometry import Point
+from .geometry import Point, Plane
 
 class Fusion(object):
     def __init__(self):
@@ -86,6 +86,15 @@ class FusionComponent(object):
     def yz_plane(self):
         return self._component.yZConstructionPlane
     
+
+class FusionPlane(object):
+    def __init__(self, plane):
+        self._plane = plane
+        self._position = None
+    
+    def position(self):
+        pass
+
 
 class FusionSketch(object):
     def __init__(self, sketch):

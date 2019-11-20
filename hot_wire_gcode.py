@@ -36,6 +36,33 @@ class HotWireGcode(object):
             for line in self.gcode_points:
                 outf.write(str(line) + '\n') 
 
+    def create_sketches(self):
+        sket1a = FusionSketch(self._base_component.create_sketch(
+            "points1", 
+            self._edge_profile_1.base_sketch.plane
+            ))
+        sket2a = FusionSketch(self._base_component.create_sketch(
+            "points2", 
+            self._edge_profile_2.base_sketch.plane
+            ))
+    
+        sketchpoints1 = []
+        sketchpoints2 = []
+
+        for gcode_point in self.gcode_points:
+            sketchpoints1.append(
+                sket1a.create_sketch_point(
+                    sket1a.model_to_sketch_space(
+                        FusionPoint.from_position(gcode_point.wire_line.start))
+                    )
+                )
+            sketchpoints2.append(
+                sket2a.create_sketch_point(
+                    sket2a.model_to_sketch_space(
+                        FusionPoint.from_position(gcode_point.wire_line.end)
+                    )))
+            
+
 
 class GCode_Point(object):
     def __init__(self, point1, point2):
@@ -64,6 +91,10 @@ class FoamEdgeProfile(object):
         self._base_sketch = sketch
         self._sorted_curves = []
         self._edge_points = []
+
+    @property
+    def base_sketch(self):
+        return self._base_sketch
 
     @property
     def sketch_point_machine_zero(self):
