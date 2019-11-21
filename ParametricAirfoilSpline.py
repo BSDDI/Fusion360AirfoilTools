@@ -39,7 +39,7 @@ def update_active_airfoil():
 def create_gcode():
     hw = HotWireGcode(FusionComponent.active_component())
     target_file = filedialog.asksaveasfilename()
-    hw.create_gcode_file(target_file)
+    hw.create_gcode_file(target_file, True)
     print_toolpaths(hw)
     
 

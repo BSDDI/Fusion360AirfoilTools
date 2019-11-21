@@ -1,5 +1,5 @@
 {
-	"python.autoComplete.extraPaths":	["C:/Users/td6834/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/Python/defs"],
-	"python.pythonPath":	"C:/Users/td6834/AppData/Local/Autodesk/webdeploy/production/39ae3be83754e11319952e5fb0373ee11dd09c95/Python/python.exe",
+	"python.autoComplete.extraPaths":	["C:/Users/thoma/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/Python/defs"],
+	"python.pythonPath":	"C:/Users/thoma/AppData/Local/Autodesk/webdeploy/production/39ae3be83754e11319952e5fb0373ee11dd09c95/Python/python.exe",
 	"python.linting.pylintEnabled":	false
 }

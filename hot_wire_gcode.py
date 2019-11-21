@@ -28,12 +28,13 @@ class HotWireGcode(object):
                 self._gcode_points.append(GCode_Point(point1, point2))
         return self._gcode_points        
 
-    def create_gcode_file(self, file):
+    def create_gcode_file(self, file, sym = False):
         with io.open(file, 'w') as outf:
             outf.write('G21\n') # millimeters
             outf.write('G94\n') # per minute
             outf.write('G90\n') # absolute movements
             for line in self.gcode_points:
+                line.sym = sym
                 outf.write(str(line) + '\n') 
 
     def create_sketches(self):
@@ -68,6 +69,7 @@ class GCode_Point(object):
     def __init__(self, point1, point2):
         self._line = Line(point1, point2)
         self._wire_line = None
+        self.sym = False
 
     @property
     def wire_line(self):
@@ -79,11 +81,18 @@ class GCode_Point(object):
         return self._wire_line
 
     def __str__(self):
-        return "G01 F" + str(HOTWIRE_PARAMS["cut_rate"]) + \
-                " X" + str(10*self.wire_line.start.y) + \
-                " Y" + str(10*self.wire_line.start.z) + \
-                " Z" + str(10*self.wire_line.end.y) + \
-                " A" + str(10*self.wire_line.end.z)
+        if self.sym:
+            return "G01 F" + str(HOTWIRE_PARAMS["cut_rate"]) + \
+                    " X" + str(10*self.wire_line.end.y) + \
+                    " Y" + str(10*self.wire_line.end.z) + \
+                    " Z" + str(10*self.wire_line.start.y) + \
+                    " A" + str(10*self.wire_line.start.z)
+        else:            
+            return "G01 F" + str(HOTWIRE_PARAMS["cut_rate"]) + \
+                    " X" + str(10*self.wire_line.start.y) + \
+                    " Y" + str(10*self.wire_line.start.z) + \
+                    " Z" + str(10*self.wire_line.end.y) + \
+                    " A" + str(10*self.wire_line.end.z)
 
 
 class FoamEdgeProfile(object):
