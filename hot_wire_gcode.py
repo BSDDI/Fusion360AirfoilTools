@@ -19,7 +19,7 @@ class HotWireGcode(object):
         self._gcode_points = []
 
     def check_profiles(self):
-        return self._edge_profile_1 == self._edge_profile_2
+        return FusionLoop.compare_curve_lists(self._edge_profile_1.sorted_curves, self._edge_profile_2.sorted_curves)
 
     @property
     def gcode_points(self):

@@ -271,12 +271,18 @@ class FusionSketchCurve(object):
 
     def parametric_points(self, npoints):
         points = []
+        #returnValue, startPoint, endPoint = self._curve.getEndPoints()
+        
+        start_param = self.parametric_range[0]
+
         for i in range(0, npoints):
-            new_point = self.parametric_point(i * (self.parametric_range[1] - self.parametric_range[0]) / npoints + self.parametric_range[0])
+            new_param = self._curve.geometry.evaluator.getParameterAtLength(start_param, i * self.length / (npoints - 1))[1]
+            new_point = self.parametric_point(new_param)
             points.append(new_point)
         return points
 
     def parametric_point(self, param):
+        print(param)
         new_point3d = self._curve.geometry.evaluator.getPointAtParameter(param)
         if new_point3d[0]:
             return FusionPoint(new_point3d[1])
