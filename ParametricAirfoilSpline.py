@@ -17,13 +17,14 @@ section_data = {
     "buddi_tail": ("b540ols-il", 263, 5),
     "buddi_fin_root": ("b540ols-il", 233, 5),
     "buddi_fin_tip": ("b540ols-il", 158, 5),
+    "naca0012": ("naca0018-il", 600, 5)
 }
 
 
 def create_new_airfoil():
     doc = FusionDocument(fusion.new_document("test_airfoil"))
     comp = FusionComponent(doc.root_component)
-    section = Airfoil("e168-il", 150, 3)
+    section = Airfoil("C:/temp/revised fairing section (50) normalised points.dat", 1017, 5, True)
     sketch = FusionSketch(comp.create_sketch("base_section", comp.xy_plane))
     spline = sketch.create_spline(section.modified_positions)
     line = sketch.create_line(spline.fitPoints.item(0), spline.fitPoints.item(spline.fitPoints.count-1))
@@ -32,7 +33,7 @@ def create_new_airfoil():
 
 def update_active_airfoil():
 
-    _section = section_data['buddi_fin_tip']
+    _section = section_data['naca0012']
 
     comp = FusionComponent.active_component()
     sketch = FusionSketch(comp.sketches["base_section"])
@@ -45,7 +46,7 @@ def update_active_airfoil():
 def create_gcode():
     hw = HotWireGcode(FusionComponent.active_component())
     target_file = filedialog.asksaveasfilename()
-    hw.create_gcode_file(target_file, False)
+    hw.create_gcode_file(target_file, True)
     print_toolpaths(hw)
     
 
@@ -57,7 +58,7 @@ def run(context):
     ui = None
     try:
 
-        create_gcode()
+        create_new_airfoil()
 
         pass
     except:

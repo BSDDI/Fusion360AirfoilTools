@@ -3,8 +3,8 @@ from .geometry import Point
 import unittest
 
 class Airfoil(object):
-    def __init__(self, airfoiltoolsname, chord, te_thickness):
-        self._raw_data = AirfoilDatFile(airfoiltoolsname)
+    def __init__(self, airfoiltoolsnameorfile, chord, te_thickness, fromfile=False):
+        self._raw_data = AirfoilDatFile(airfoiltoolsnameorfile, fromfile)
         self._chord = chord
         self._te_thickness = te_thickness
         self._modified_positions = []
@@ -23,7 +23,7 @@ class Airfoil(object):
         return self._apply_te_thickness(self._apply_chord(in_point))
 
     def _apply_chord(self, in_point):
-        return in_point * (self._chord)
+        return in_point * self._chord
     
     def _apply_te_thickness(self, in_point):
         add_thick = 0.5 * self._te_thickness * in_point.x / self._chord
